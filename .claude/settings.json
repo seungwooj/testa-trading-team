@@ -1,0 +1,6 @@
+{
+  "model": "claude-sonnet-20240924",
+  "max_thinking_tokens": 10000,
+  "claude_code_subagent_model": "haiku-20240924",
+  "claude_code_subagent_max_thinking_tokens": 10000
+}

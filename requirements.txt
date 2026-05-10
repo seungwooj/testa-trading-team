@@ -1,0 +1,6 @@
+anthropic
+requests
+websocket-client
+pandas
+python-dotenv
+schedule
