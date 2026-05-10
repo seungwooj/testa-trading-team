@@ -359,3 +359,9 @@ launchctl unload ~/Library/LaunchAgents/com.testa.trading.pre_close.plist
 - `data/stop_losses.json`: 영구 상태 — 초기화 전 반드시 확인
 - 전략 변경 시 `GROUNDRULE.md` 먼저 수정 → 코드 반영 순서 준수
 - 에이전트 `.md` 파일 수정 시 전략 방향성 유지
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
