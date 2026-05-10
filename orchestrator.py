@@ -208,7 +208,7 @@ def market_open():
 
 def stop_loss_monitor():
     print(f"\n{'='*50}")
-    print(f"[{now()}] 손절 모니터링 시작 (14:30까지)")
+    print(f"[{now()}] 손절 모니터링 시작 (15:30까지)")
     print(f"{'='*50}\n")
 
     stop_losses = load_json(STOP_LOSS_FILE, {})
@@ -241,7 +241,11 @@ def stop_loss_monitor():
             save_json(STOP_LOSS_FILE, stop_losses)
             executed = [p for p in stop_triggered if p["code"] in executed_codes]
             if executed:
-                notify_stop_loss(executed)
+                try:
+                    cash_after = get_balance()["cash"]
+                except Exception:
+                    cash_after = 0
+                notify_stop_loss(executed, cash_after)
 
         if datetime.now().strftime("%H%M") >= "1530":
             break

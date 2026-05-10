@@ -1,5 +1,5 @@
 import requests
-from config import SLACK_WEBHOOK_URL, MODE
+from config import SLACK_WEBHOOK_URL, SLACK_BOT_TOKEN, MODE
 
 
 def send(text: str):
@@ -63,16 +63,16 @@ def notify_buy(code: str, quantity: int, price: int, stop_loss: float):
 
 def notify_no_entry():
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
-    send(f"*[{mode_tag}] 📭 14:30~15:30 — 고점 돌파 종목 없음, 금일 매수 없음*")
+    send(f"*[{mode_tag}] 📭 15:00~15:30 — 고점 돌파 종목 없음, 금일 매수 없음*")
 
 
-def notify_stop_loss(sold: list):
+def notify_stop_loss(sold: list, cash_after: int = 0):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
     lines = "\n".join(
         f"  • {s['name']}({s['code']}) {s['quantity']}주 @ {s['current_price']:,}원  |  손절가: {s['stop_loss']:,}원"
         for s in sold
     )
-    send(f"*[{mode_tag}] 🔴 손절 실행*\n\n{lines}")
+    send(f"*[{mode_tag}] 🔴 손절 실행*\n\n{lines}\n\n*현금 잔액: {cash_after:,}원*")
 
 
 def notify_kickoff(lead_close: str, has_mismatch: bool):
