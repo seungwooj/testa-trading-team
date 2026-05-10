@@ -1,5 +1,5 @@
 import requests
-from config import SLACK_WEBHOOK_URL, SLACK_BOT_TOKEN, MODE
+from config import SLACK_WEBHOOK_URL, MODE
 
 
 def send(text: str):
