@@ -1,0 +1,28 @@
+/Users/minerva/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+
+==================================================
+[08:04:13] 단계1 — 장시작 30분 전 분석 시작
+==================================================
+
+[섹터 선정] 업종지수 1개월 수익률 기준...
+  → 선정 섹터: 건설업
+  의견: # 섹터 스카우트 — 일일 선정 결과
+
+## ✅ 선정 섹터: 건설업 (+24.18%)
+
+---
+
+### 📊 선정 근거
+
+1개월 수익률 기준 건설업(+24.18%)이 2위 보험(+21.49%)을 **약 2.7%p 차이...
+
+[후보 종목 선정] 3조건 필터링...
+  → 투자 고려 대상: []
+
+[보유 종목 확인] 익절 대상 선정...
+
+  → 익절 대상: []
+
+[완료] 09:00 익절 매도, 14:30~15:30 고점 돌파 시 매수 예정
+

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 from agents.base_agent import BaseAgent
 from config import BASE_DIR
-from tools.slack import notify_kickoff
+from tools.slack import notify_kickoff, notify_start
 
 OUTPUT = BASE_DIR / "data" / "kickoff_notes.md"
 GROUNDRULE_PATH = BASE_DIR / "GROUNDRULE.md"
@@ -110,6 +110,7 @@ def save_results(groundrule_loaded: bool, lead_open: str, verifications: dict, c
 
 
 def main():
+    notify_start("kickoff")
     print("=" * 60)
     print("  트레이딩 팀 킥오프 미팅")
     print("=" * 60)

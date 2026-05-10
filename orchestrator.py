@@ -25,7 +25,7 @@ from tools.kis_market import get_current_price
 from tools.technical import get_mid_ma_price, add_moving_averages
 from tools.kis_market import get_daily_ohlcv
 from config import BASE_DIR, TRADING_RULES
-from tools.slack import notify_pre_close, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss
+from tools.slack import notify_pre_close, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss, notify_start, notify_stop_loss_monitor_end
 
 STATE_DIR = BASE_DIR / "data"
 CANDIDATES_FILE = STATE_DIR / "candidates.json"
@@ -75,6 +75,7 @@ class TeamLead(BaseAgent):
 # ── 단계 1: 장시작 30분 전 (08:30) ───────────────────────────
 
 def pre_close():
+    notify_start("pre_close")
     print(f"\n{'='*50}")
     print(f"[{now()}] 단계1 — 장시작 30분 전 분석 시작")
     print(f"{'='*50}\n")
@@ -161,6 +162,7 @@ def pre_close():
 # ── 단계 2: 장시작 (09:00) ───────────────────────────────────
 
 def market_open():
+    notify_start("market_open")
     print(f"\n{'='*50}")
     print(f"[{now()}] 단계2 — 장시작 익절 매도")
     print(f"{'='*50}\n")
@@ -207,6 +209,7 @@ def market_open():
 # ── 단계 2-5: 09:05~14:30 손절 모니터링 ─────────────────────
 
 def stop_loss_monitor():
+    notify_start("stop_loss_monitor")
     print(f"\n{'='*50}")
     print(f"[{now()}] 손절 모니터링 시작 (15:30까지)")
     print(f"{'='*50}\n")
@@ -251,12 +254,14 @@ def stop_loss_monitor():
             break
         time.sleep(60)
 
+    notify_stop_loss_monitor_end()
     print(f"  [{now()}] 손절 모니터링 종료\n")
 
 
 # ── 단계 3: 14:30~15:30 고점 돌파 감시 → 매수 ────────────────
 
 def entry_monitor():
+    notify_start("entry_monitor")
     print(f"\n{'='*50}")
     print(f"[{now()}] 단계3 — 고점 돌파 감시 시작 (15:00~15:30)")
     print(f"{'='*50}\n")
