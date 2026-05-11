@@ -99,7 +99,7 @@ def notify_stop_loss(sold: list, cash_after: int = 0):
 
 def notify_kickoff(lead_close: str, has_mismatch: bool, applied_changes: str = ""):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
-    summary = lead_close[:800] + "..." if len(lead_close) > 800 else lead_close
+    summary = lead_close[:4000] + "..." if len(lead_close) > 4000 else lead_close
 
     if has_mismatch and applied_changes:
         change_block = f"\n\n*자동 반영 결과:*\n{applied_changes}"
