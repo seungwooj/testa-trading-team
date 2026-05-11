@@ -206,7 +206,7 @@ def market_open():
     print()
 
 
-# ── 단계 2-5: 09:05~14:30 손절 모니터링 ─────────────────────
+# ── 단계 2-5: 09:05~15:30 손절 모니터링 ─────────────────────
 
 def stop_loss_monitor():
     notify_start("stop_loss_monitor")
@@ -217,6 +217,7 @@ def stop_loss_monitor():
     stop_losses = load_json(STOP_LOSS_FILE, {})
     if not stop_losses:
         print("  보유 종목 없음 — 모니터링 종료\n")
+        notify_stop_loss_monitor_end()
         return
 
     risk_manager = RiskManager()
