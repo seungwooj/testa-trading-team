@@ -217,7 +217,7 @@ def stop_loss_monitor():
     stop_losses = load_json(STOP_LOSS_FILE, {})
     if not stop_losses:
         print("  보유 종목 없음 — 모니터링 종료\n")
-        notify_stop_loss_monitor_end()
+        notify_stop_loss_monitor_end(no_positions=True)
         return
 
     risk_manager = RiskManager()

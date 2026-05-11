@@ -64,9 +64,12 @@ def notify_market_open(sold: list, cash_after: int = 0):
     send(f"*[{mode_tag}] ✅ 09:00 — 익절 매도 완료*\n\n{sold_text}\n\n*현금 잔액: {cash_after:,}원*")
 
 
-def notify_stop_loss_monitor_end():
+def notify_stop_loss_monitor_end(no_positions: bool = False):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
-    send(f"*[{mode_tag}] ✅ 15:30 — 손절 모니터링 종료*")
+    if no_positions:
+        send(f"*[{mode_tag}] ✅ 손절 모니터링 종료*\n보유 종목 없음 — 즉시 종료")
+    else:
+        send(f"*[{mode_tag}] ✅ 15:30 — 손절 모니터링 종료*")
 
 
 def notify_buy(code: str, quantity: int, price: int, stop_loss: float):
