@@ -110,7 +110,7 @@
 | 시간 | 이벤트 | 스크립트 | 빈도 |
 |------|--------|---------|------|
 | 월요일 07:30 | 팀 킥오프 미팅 | `team_kickoff.py` | 주 1회 |
-| 평일 08:00 | 장시작 전 분석 | `orchestrator.py pre_close` | 매일 |
+| 평일 08:00 | 장시작 전 분석 | `orchestrator.py pre_open` | 매일 |
 | 평일 09:00 | 익절 매도 | `orchestrator.py market_open` | 매일 |
 | 평일 09:05 | 손절 모니터링 | `orchestrator.py stop_loss_monitor` | 매일 |
 | 평일 15:00 | 고점 돌파 감시 → 매수 | `orchestrator.py entry_monitor` | 매일 |
@@ -126,7 +126,7 @@
 
 > 전략이나 에이전트 `.md` 파일이 변경된 경우 해당 요일에 추가 실행 권장
 
-### 평일 08:00 — 장시작 전 분석 (`pre_close`)
+### 평일 08:00 — 장시작 전 분석 (`pre_open`)
 1. **섹터 선정**: 업종지수 1개월 수익률 기준 1개 선정, 신뢰도 판단
 2. **후보 종목 선정**: 선정 섹터 내 3조건 필터링 → 투자 고려 대상
 3. **보유 종목 점검**: 매수가/현재가/수익률/손절가 확인
@@ -192,7 +192,7 @@
 
 ```bash
 # 일반 운영
-python orchestrator.py mock pre_close           # 08:00
+python orchestrator.py mock pre_open           # 08:00
 python orchestrator.py mock market_open         # 09:00
 python orchestrator.py mock stop_loss_monitor   # 09:05~15:30
 python orchestrator.py mock entry_monitor       # 15:00~15:30
@@ -222,7 +222,7 @@ python setup_sectors.py mock              # data/sectors.json 생성
 ```
 GROUNDRULE.md            ← 이 문서 (전략 단일 진실 공급원)
 CLAUDE.md                ← Claude Code용 프로젝트 지침
-orchestrator.py          ← 실행 진입점 (pre_close / market_open / stop_loss_monitor / entry_monitor)
+orchestrator.py          ← 실행 진입점 (pre_open / market_open / stop_loss_monitor / entry_monitor)
 strategy_debate.py       ← 에이전트 전략 토론
 team_kickoff.py          ← 팀 킥오프 미팅
 

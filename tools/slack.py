@@ -11,7 +11,7 @@ def send(text: str):
 def notify_start(phase: str):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
     labels = {
-        "pre_close":          "📡 08:00 — 장시작 전 분석 시작",
+        "pre_open":          "📡 08:00 — 장시작 전 분석 시작",
         "market_open":        "📡 09:00 — 익절 매도 시작",
         "stop_loss_monitor":  "📡 09:05 — 손절 모니터링 시작",
         "entry_monitor":      "📡 15:00 — 고점 돌파 감시 시작",
@@ -22,7 +22,7 @@ def notify_start(phase: str):
     send(f"*[{mode_tag}] {label}*")
 
 
-def notify_pre_close(sector: str, candidates: list, profit_targets: list):
+def notify_pre_open(sector: str, candidates: list, profit_targets: list):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
 
     if candidates:

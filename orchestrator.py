@@ -2,10 +2,10 @@
 testa-trading-team 오케스트레이터
 
 실행 방법:
-  python orchestrator.py [mock|real] [pre_close|market_open|entry_monitor]
+  python orchestrator.py [mock|real] [pre_open|market_open|entry_monitor]
 
 단계별 스케줄:
-  08:00           → pre_close      (섹터/후보 선정, 익절 대상 확인)
+  08:00           → pre_open      (섹터/후보 선정, 익절 대상 확인)
   09:00           → market_open    (익절 매도)
   15:00 ~ 15:30   → entry_monitor  (고점 돌파 감시 → 매수)
 """
@@ -25,7 +25,7 @@ from tools.kis_market import get_current_price
 from tools.technical import get_mid_ma_price, add_moving_averages
 from tools.kis_market import get_daily_ohlcv
 from config import BASE_DIR, TRADING_RULES
-from tools.slack import notify_pre_close, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss, notify_start, notify_stop_loss_monitor_end
+from tools.slack import notify_pre_open, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss, notify_start, notify_stop_loss_monitor_end
 
 STATE_DIR = BASE_DIR / "data"
 CANDIDATES_FILE = STATE_DIR / "candidates.json"
@@ -74,8 +74,8 @@ class TeamLead(BaseAgent):
 
 # ── 단계 1: 장시작 30분 전 (08:30) ───────────────────────────
 
-def pre_close():
-    notify_start("pre_close")
+def pre_open():
+    notify_start("pre_open")
     print(f"\n{'='*50}")
     print(f"[{now()}] 단계1 — 장시작 30분 전 분석 시작")
     print(f"{'='*50}\n")
@@ -156,7 +156,7 @@ def pre_close():
     save_json(PROFIT_TARGETS_FILE, {"date": today(), "targets": profit_targets})
     print(f"\n  → 익절 대상: {[t['code'] for t in profit_targets]}")
     print(f"\n[완료] 09:00 익절 매도, 14:30~15:30 고점 돌파 시 매수 예정\n")
-    notify_pre_close(sector_result["top_sector"], candidates, profit_targets)
+    notify_pre_open(sector_result["top_sector"], candidates, profit_targets)
 
 
 # ── 단계 2: 장시작 (09:00) ───────────────────────────────────
@@ -357,10 +357,10 @@ def today():
 # ── 메인 ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    phase = sys.argv[2] if len(sys.argv) > 2 else "pre_close"
+    phase = sys.argv[2] if len(sys.argv) > 2 else "pre_open"
 
-    if phase == "pre_close":
-        pre_close()
+    if phase == "pre_open":
+        pre_open()
     elif phase == "market_open":
         market_open()
     elif phase == "stop_loss_monitor":
@@ -369,4 +369,4 @@ if __name__ == "__main__":
         entry_monitor()
     else:
         print(f"알 수 없는 단계: {phase}")
-        print("사용법: python orchestrator.py [mock|real] [pre_close|market_open|stop_loss_monitor|entry_monitor]")
+        print("사용법: python orchestrator.py [mock|real] [pre_open|market_open|stop_loss_monitor|entry_monitor]")
