@@ -22,16 +22,22 @@ def notify_start(phase: str):
     send(f"*[{mode_tag}] {label}*")
 
 
-def notify_pre_open(sector: str, candidates: list, profit_targets: list):
+def notify_pre_open(sectors: list, candidates: list, profit_targets: list):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
+
+    sector_text = "  " + " / ".join(
+        f"{i+1}위 {s['name']} ({s['return']:+.1f}%)"
+        for i, s in enumerate(sectors)
+    )
 
     if candidates:
         candidate_lines = []
         for c in candidates:
             name = c.get("name", c["code"])
             price = c.get("current_price", c["close"])
+            sector = c.get("sector", "")
             candidate_lines.append(
-                f"  • *{name}* (`{c['code']}`)  현재가 {price:,.0f}원\n"
+                f"  • *{name}* (`{c['code']}`) [{sector}]  현재가 {price:,.0f}원\n"
                 f"    └ 5일선 {c['ma5']:,.0f} / 20일선 {c['ma20']:,.0f} / 60일선 {c['ma60']:,.0f}\n"
                 f"    └ 돌파기준가 {c['swing_high']:,.0f}원  |  손절가 {c['stop_loss']:,.0f}원"
             )
@@ -49,7 +55,7 @@ def notify_pre_open(sector: str, candidates: list, profit_targets: list):
 
     send(
         f"*[{mode_tag}] ✅ 08:00 — 장시작 전 분석 완료*\n\n"
-        f"*선정 섹터:* {sector}\n\n"
+        f"*선정 섹터 (상위 3):*\n{sector_text}\n\n"
         f"*투자 고려 대상:*\n{candidate_text}\n\n"
         f"*익절 대상 (09:00 매도 예정):*\n{profit_text}"
     )

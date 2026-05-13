@@ -93,38 +93,41 @@ def pre_open():
         print(f"  ⚠ 경고: {sector_result['warning']}")
     print(f"  의견: {sector_result['opinion'][:120]}...\n")
 
+    sector_names = " / ".join(s["name"] for s in sector_result["top_sectors"])
+    candidates = []
+
     # 갭 3: 전 섹터 음수 → 신규 매수 보류, 보유 종목 관리만 진행
     if not sector_result["confident"]:
         print("[보류] 섹터 선정 신뢰도 낮음 — 신규 매수 없음. 보유 종목 관리만 진행.\n")
         save_json(CANDIDATES_FILE, {
             "date": today(),
-            "sector": sector_result["top_sector"],
+            "sector": sector_names,
             "sector_opinion": sector_result["opinion"],
             "warning": sector_result["warning"],
             "candidates": [],
         })
     else:
-        stock_names = sector_result["stock_names"]
-
-        # 2. 후보 종목 선정 (3조건 필터)
-        print("[후보 종목 선정] 3조건 필터링...")
-        candidates = chart_analyst.scan_watchlist(sector_result["watchlist"])
-        for c in candidates:
-            c["name"] = stock_names.get(c["code"], c["code"])
-            try:
-                info = get_current_price(c["code"])
-                c["current_price"] = info["price"]
-            except Exception:
-                c["current_price"] = int(c["close"])
+        # 2. 후보 종목 선정 (상위 3개 섹터 전체 3조건 필터)
+        print("[후보 종목 선정] 상위 3개 섹터 3조건 필터링...")
+        for sec in sector_result["top_sectors"]:
+            sec_candidates = chart_analyst.scan_watchlist(sec["watchlist"])
+            for c in sec_candidates:
+                c["name"] = sec["stock_names"].get(c["code"], c["code"])
+                c["sector"] = sec["name"]
+                try:
+                    info = get_current_price(c["code"])
+                    c["current_price"] = info["price"]
+                except Exception:
+                    c["current_price"] = int(c["close"])
+            candidates.extend(sec_candidates)
         print(f"  → 투자 고려 대상: {[c['code'] for c in candidates]}\n")
         save_json(CANDIDATES_FILE, {
             "date": today(),
-            "sector": sector_result["top_sector"],
+            "sector": sector_names,
             "sector_opinion": sector_result["opinion"],
             "warning": sector_result.get("warning", ""),
             "candidates": candidates,
         })
-        candidates = candidates  # 아래 보유 종목 확인 단계에서도 사용
 
     # 3. 현재 보유 종목 상태 확인 + 익절 대상 선정
     print("[보유 종목 확인] 익절 대상 선정...")
@@ -157,7 +160,7 @@ def pre_open():
     save_json(PROFIT_TARGETS_FILE, {"date": today(), "targets": profit_targets})
     print(f"\n  → 익절 대상: {[t['code'] for t in profit_targets]}")
     print(f"\n[완료] 09:00 익절 매도, 10:00~10:30 고점 돌파 시 매수 예정\n")
-    notify_pre_open(sector_result["top_sector"], candidates, profit_targets)
+    notify_pre_open(sector_result["top_sectors"], candidates, profit_targets)
 
 
 # ── 단계 2: 장시작 (09:00) ───────────────────────────────────
