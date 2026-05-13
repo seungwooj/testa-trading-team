@@ -14,7 +14,7 @@ def notify_start(phase: str):
         "pre_open":          "📡 08:00 — 장시작 전 분석 시작",
         "market_open":        "📡 09:00 — 익절 매도 시작",
         "stop_loss_monitor":  "📡 09:05 — 손절 모니터링 시작",
-        "entry_monitor":      "📡 15:00 — 고점 돌파 감시 시작",
+        "entry_monitor":      "📡 10:00 — 고점 돌파 감시 시작",
         "kickoff":            "📡 07:30 — 킥오프 미팅 시작",
         "strategy_debate":    "📡 전략 토론 시작",
     }
@@ -85,7 +85,7 @@ def notify_buy(code: str, quantity: int, price: int, stop_loss: float):
 
 def notify_no_entry():
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
-    send(f"*[{mode_tag}] ✅ 15:30 — 고점 돌파 종목 없음, 금일 매수 없음*")
+    send(f"*[{mode_tag}] ✅ 10:30 — 고점 돌파 종목 없음, 금일 매수 없음*")
 
 
 def notify_stop_loss(sold: list, cash_after: int = 0):

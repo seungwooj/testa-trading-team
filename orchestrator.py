@@ -5,9 +5,10 @@ testa-trading-team 오케스트레이터
   python orchestrator.py [mock|real] [pre_open|market_open|entry_monitor]
 
 단계별 스케줄:
-  08:00           → pre_open      (섹터/후보 선정, 익절 대상 확인)
-  09:00           → market_open    (익절 매도)
-  15:00 ~ 15:30   → entry_monitor  (고점 돌파 감시 → 매수)
+  08:00           → pre_open           (섹터/후보 선정, 익절 대상 확인)
+  09:00           → market_open        (익절 매도)
+  09:05 ~ 15:30   → stop_loss_monitor  (손절 모니터링, 60초 간격)
+  10:00 ~ 10:30   → entry_monitor      (고점 돌파 감시 → 매수)
 """
 import sys
 import json
@@ -155,7 +156,7 @@ def pre_open():
 
     save_json(PROFIT_TARGETS_FILE, {"date": today(), "targets": profit_targets})
     print(f"\n  → 익절 대상: {[t['code'] for t in profit_targets]}")
-    print(f"\n[완료] 09:00 익절 매도, 14:30~15:30 고점 돌파 시 매수 예정\n")
+    print(f"\n[완료] 09:00 익절 매도, 10:00~10:30 고점 돌파 시 매수 예정\n")
     notify_pre_open(sector_result["top_sector"], candidates, profit_targets)
 
 
@@ -259,12 +260,12 @@ def stop_loss_monitor():
     print(f"  [{now()}] 손절 모니터링 종료\n")
 
 
-# ── 단계 3: 14:30~15:30 고점 돌파 감시 → 매수 ────────────────
+# ── 단계 3: 10:00~10:30 고점 돌파 감시 → 매수 ────────────────
 
 def entry_monitor():
     notify_start("entry_monitor")
     print(f"\n{'='*50}")
-    print(f"[{now()}] 단계3 — 고점 돌파 감시 시작 (15:00~15:30)")
+    print(f"[{now()}] 단계3 — 고점 돌파 감시 시작 (10:00~10:30)")
     print(f"{'='*50}\n")
 
     state = load_json(CANDIDATES_FILE, {"candidates": []})
@@ -283,7 +284,7 @@ def entry_monitor():
 
     print(f"  감시 종목: {[c['code'] for c in candidates]}\n")
 
-    while datetime.now().strftime("%H%M") <= "1530":
+    while datetime.now().strftime("%H%M") <= "1030":
         balance = get_balance()
         current_codes = {p["code"] for p in balance["positions"]}
 
@@ -336,7 +337,7 @@ def entry_monitor():
             except Exception as e:
                 print(f"  {code} 처리 실패: {e}")
 
-        if datetime.now().strftime("%H%M") > "1530":
+        if datetime.now().strftime("%H%M") > "1030":
             break
         time.sleep(60)
 
