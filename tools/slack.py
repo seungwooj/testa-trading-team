@@ -114,6 +114,17 @@ def notify_kickoff(lead_close: str, has_mismatch: bool, applied_changes: str = "
     )
 
 
+def notify_position_hold(reason: str = ""):
+    mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
+    detail = f"\n사유: {reason}" if reason else ""
+    send(f"*[{mode_tag}] ⚠️ 포지션 계산 보류 — 팀장 확인 필요*{detail}\n10:00 신규 매수 중단")
+
+
+def notify_cash_fallback(cash: int):
+    mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
+    send(f"*[{mode_tag}] ⚠️ 현금 잔액 슬랙 보고 누락 — API 직접 조회로 대체*\n조회 잔액: {cash:,}원")
+
+
 def notify_strategy_debate(results: list):
     mode_tag = "🟡 모의" if MODE == "mock" else "🔴 실전"
     lines = [f"*[{mode_tag}] ✅ 주말 전략 토론 완료*\n"]

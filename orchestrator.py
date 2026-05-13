@@ -26,7 +26,7 @@ from tools.kis_market import get_current_price
 from tools.technical import get_mid_ma_price, add_moving_averages
 from tools.kis_market import get_daily_ohlcv
 from config import BASE_DIR, TRADING_RULES
-from tools.slack import notify_pre_open, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss, notify_start, notify_stop_loss_monitor_end
+from tools.slack import notify_pre_open, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss, notify_start, notify_stop_loss_monitor_end, notify_position_hold, notify_cash_fallback
 
 STATE_DIR = BASE_DIR / "data"
 CANDIDATES_FILE = STATE_DIR / "candidates.json"
@@ -285,7 +285,12 @@ def entry_monitor():
     print(f"  감시 종목: {[c['code'] for c in candidates]}\n")
 
     while datetime.now().strftime("%H%M") <= "1030":
-        balance = get_balance()
+        try:
+            balance = get_balance()
+        except Exception as e:
+            notify_position_hold(f"잔액 조회 실패: {e}")
+            print(f"  [{now()}] 잔액 조회 실패 — 포지션 계산 보류: {e}")
+            break
         current_codes = {p["code"] for p in balance["positions"]}
 
         # 갭 4: 동시 돌파 대비 — 리스크 비율 낮은 순(손절가와 진입가 간격이 좁은 순)으로 우선 처리
