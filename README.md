@@ -114,7 +114,7 @@ Claude 멀티에이전트가 협업해 매매 판단을 내린다.
 | 시간 | 이벤트 | 스크립트 | 빈도 |
 |------|--------|----------|------|
 | 월요일 07:30 | 팀 킥오프 미팅 | `team_kickoff.py` | 주 1회 |
-| 평일 08:00 | 장시작 전 분석 | `orchestrator.py pre_close` | 매일 |
+| 평일 08:00 | 장시작 전 분석 | `orchestrator.py pre_open` | 매일 |
 | 평일 09:00 | 익절 매도 | `orchestrator.py market_open` | 매일 |
 | 평일 09:05~15:30 | 손절 모니터링 | `orchestrator.py stop_loss_monitor` | 매일 |
 | 평일 15:00~15:30 | 고점 돌파 감시 → 매수 | `orchestrator.py entry_monitor` | 매일 |
@@ -122,7 +122,7 @@ Claude 멀티에이전트가 협업해 매매 판단을 내린다.
 
 ---
 
-### 평일 08:00 — 장시작 전 분석 (`pre_close`)
+### 평일 08:00 — 장시작 전 분석 (`pre_open`)
 
 1. **섹터 선정**: 업종지수 1개월 수익률 기준 1개 선정, 신뢰도 판단
 2. **후보 종목 선정**: 선정 섹터 내 3조건 필터링
@@ -182,7 +182,7 @@ testa-trading-team/
 ├── config.py                  # 환경변수 로드 (.env.mock / .env.real)
 ├── requirements.txt           # 의존 패키지
 │
-├── orchestrator.py            # 실행 진입점 (pre_close / market_open / stop_loss_monitor / entry_monitor)
+├── orchestrator.py            # 실행 진입점 (pre_open / market_open / stop_loss_monitor / entry_monitor)
 ├── team_kickoff.py            # 월요일 팀 킥오프 미팅
 ├── strategy_debate.py         # 주말 전략 토론
 │
@@ -208,7 +208,7 @@ testa-trading-team/
 │
 ├── scripts/                   # 자동 실행 스크립트 + 유틸
 │   ├── run_kickoff.sh         # launchd 래퍼 (월 07:30)
-│   ├── run_pre_close.sh       # launchd 래퍼 (평일 08:00)
+│   ├── run_pre_open.sh       # launchd 래퍼 (평일 08:00)
 │   ├── run_market_open.sh     # launchd 래퍼 (평일 09:00)
 │   ├── run_stop_loss_monitor.sh  # launchd 래퍼 (평일 09:05)
 │   ├── run_entry_monitor.sh   # launchd 래퍼 (평일 15:00)
@@ -226,7 +226,7 @@ testa-trading-team/
 │   └── strategy_notes.md      # 전략 토론 결과
 │
 └── logs/                      # 자동 실행 로그 (launchd)
-    ├── pre_close.log
+    ├── pre_open.log
     ├── market_open.log
     ├── stop_loss_monitor.log
     ├── entry_monitor.log
@@ -279,7 +279,7 @@ python setup_sectors.py mock
 
 ```bash
 # 08:00 — 장시작 전 분석
-python orchestrator.py mock pre_close
+python orchestrator.py mock pre_open
 
 # 09:00 — 익절 매도
 python orchestrator.py mock market_open
@@ -305,7 +305,7 @@ python strategy_debate.py mock
 
 ```bash
 # 등록
-launchctl load ~/Library/LaunchAgents/com.testa.trading.pre_close.plist
+launchctl load ~/Library/LaunchAgents/com.testa.trading.pre_open.plist
 launchctl load ~/Library/LaunchAgents/com.testa.trading.market_open.plist
 launchctl load ~/Library/LaunchAgents/com.testa.trading.entry_monitor.plist
 launchctl load ~/Library/LaunchAgents/com.testa.trading.kickoff.plist
@@ -315,7 +315,7 @@ launchctl load ~/Library/LaunchAgents/com.testa.trading.strategy_debate.plist
 launchctl list | grep com.testa
 
 # 해제 (일시 정지)
-launchctl unload ~/Library/LaunchAgents/com.testa.trading.pre_close.plist
+launchctl unload ~/Library/LaunchAgents/com.testa.trading.pre_open.plist
 ```
 
 > **주의**: Mac이 잠들어 있으면 실행되지 않는다. 해당 시간에 Mac이 깨어 있어야 한다.

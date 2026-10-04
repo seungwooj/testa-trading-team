@@ -24,7 +24,7 @@ Claude 멀티에이전트가 협업해 매매 판단을 내린다.
 
 ## 실행 방법
 ```bash
-python orchestrator.py mock pre_close           # 08:00 단계
+python orchestrator.py mock pre_open           # 08:00 단계
 python orchestrator.py mock market_open         # 09:00 단계
 python orchestrator.py mock stop_loss_monitor   # 09:05~15:30 단계
 python orchestrator.py mock entry_monitor       # 15:00~15:30 단계
@@ -35,7 +35,7 @@ python setup_sectors.py mock              # sectors.json 초기화 (최초 1회)
 
 ## 파일 구조
 ```
-orchestrator.py          진입점 (pre_close / market_open / stop_loss_monitor / entry_monitor)
+orchestrator.py          진입점 (pre_open / market_open / stop_loss_monitor / entry_monitor)
 strategy_debate.py       에이전트 전략 토론
 team_kickoff.py          팀 킥오프 미팅
 config.py                환경변수 (.env.mock / .env.real)

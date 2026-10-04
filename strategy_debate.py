@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 from agents.base_agent import BaseAgent, client
 from config import BASE_DIR
-from tools.slack import notify_strategy_debate
+from tools.slack import notify_strategy_debate, notify_start
 
 OUTPUT = BASE_DIR / "data" / "strategy_notes.md"
 GROUNDRULE_PATH = BASE_DIR / "GROUNDRULE.md"

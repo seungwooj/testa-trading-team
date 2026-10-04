@@ -15,7 +15,7 @@ class SectorScout(BaseAgent):
     SPEC_FILE = "SECTOR_SCOUT.md"
 
     def __init__(self):
-        super().__init__("섹터 스카우트", "섹터 분석가 — 최근 1개월 업종지수 수익률 기준으로 자금이 가장 많이 몰린 섹터 1개를 선정하는 역할")
+        super().__init__("섹터 스카우트", "섹터 분석가 — 최근 1개월 업종지수 수익률 기준으로 자금이 가장 많이 몰린 상위 3개 섹터를 선정하는 역할")
 
     def _index_1m_return(self, index_code: str) -> float:
         """업종지수의 최근 1개월 수익률 (%)"""
@@ -51,32 +51,40 @@ class SectorScout(BaseAgent):
             index_code = data.get("index_code", "")
             sector_returns[name] = self._index_1m_return(index_code) if index_code else 0.0
 
-        top_sector = max(sector_returns, key=sector_returns.get)
+        sorted_sectors = sorted(sector_returns.items(), key=lambda x: -x[1])
         confident, warning = self._check_confidence(sector_returns)
+
+        top_3 = sorted_sectors[:3]
+        top_sectors = []
+        for name, ret in top_3:
+            stocks = sectors[name]["stocks"]
+            top_sectors.append({
+                "name": name,
+                "return": ret,
+                "watchlist": [s["code"] for s in stocks],
+                "stock_names": {s["code"]: s["name"] for s in stocks},
+            })
+
+        top_sector = top_3[0][0]
 
         prompt = (
             f"최근 1개월 업종지수 수익률입니다:\n"
-            + "\n".join(
-                f"- {s}: {r:+.2f}%"
-                for s, r in sorted(sector_returns.items(), key=lambda x: -x[1])
-            )
+            + "\n".join(f"- {s}: {r:+.2f}%" for s, r in sorted_sectors)
         )
         if warning:
             prompt += f"\n\n[주의] {warning}"
-        prompt += f"\n\n'{top_sector}' 섹터를 선정한 이유와 시장 흐름을 간결하게 설명해주세요."
+        prompt += (
+            f"\n\n상위 3개 섹터({', '.join(s['name'] for s in top_sectors)})를 선정한 이유와 "
+            f"시장 흐름을 간결하게 설명해주세요."
+        )
 
         opinion = self.think(prompt)
-
-        top_stocks = sectors[top_sector]["stocks"]
-        watchlist = [s["code"] for s in top_stocks]
-        stock_names = {s["code"]: s["name"] for s in top_stocks}
 
         return {
             "returns": sector_returns,
             "top_sector": top_sector,
+            "top_sectors": top_sectors,
             "opinion": opinion,
-            "watchlist": watchlist,
-            "stock_names": stock_names,
             "confident": confident,
             "warning": warning,
         }

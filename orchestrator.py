@@ -2,12 +2,13 @@
 testa-trading-team 오케스트레이터
 
 실행 방법:
-  python orchestrator.py [mock|real] [pre_close|market_open|entry_monitor]
+  python orchestrator.py [mock|real] [pre_open|market_open|entry_monitor]
 
 단계별 스케줄:
-  08:00           → pre_close      (섹터/후보 선정, 익절 대상 확인)
-  09:00           → market_open    (익절 매도)
-  15:00 ~ 15:30   → entry_monitor  (고점 돌파 감시 → 매수)
+  08:00           → pre_open           (섹터/후보 선정, 익절 대상 확인)
+  09:00           → market_open        (익절 매도)
+  09:05 ~ 15:30   → stop_loss_monitor  (손절 모니터링, 60초 간격)
+  10:00 ~ 10:30   → entry_monitor      (고점 돌파 감시 → 매수)
 """
 import sys
 import json
@@ -25,7 +26,7 @@ from tools.kis_market import get_current_price
 from tools.technical import get_mid_ma_price, add_moving_averages
 from tools.kis_market import get_daily_ohlcv
 from config import BASE_DIR, TRADING_RULES
-from tools.slack import notify_pre_close, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss
+from tools.slack import notify_pre_open, notify_market_open, notify_buy, notify_no_entry, notify_stop_loss, notify_start, notify_stop_loss_monitor_end, notify_position_hold, notify_cash_fallback
 
 STATE_DIR = BASE_DIR / "data"
 CANDIDATES_FILE = STATE_DIR / "candidates.json"
@@ -74,7 +75,8 @@ class TeamLead(BaseAgent):
 
 # ── 단계 1: 장시작 30분 전 (08:30) ───────────────────────────
 
-def pre_close():
+def pre_open():
+    notify_start("pre_open")
     print(f"\n{'='*50}")
     print(f"[{now()}] 단계1 — 장시작 30분 전 분석 시작")
     print(f"{'='*50}\n")
@@ -91,38 +93,41 @@ def pre_close():
         print(f"  ⚠ 경고: {sector_result['warning']}")
     print(f"  의견: {sector_result['opinion'][:120]}...\n")
 
+    sector_names = " / ".join(s["name"] for s in sector_result["top_sectors"])
+    candidates = []
+
     # 갭 3: 전 섹터 음수 → 신규 매수 보류, 보유 종목 관리만 진행
     if not sector_result["confident"]:
         print("[보류] 섹터 선정 신뢰도 낮음 — 신규 매수 없음. 보유 종목 관리만 진행.\n")
         save_json(CANDIDATES_FILE, {
             "date": today(),
-            "sector": sector_result["top_sector"],
+            "sector": sector_names,
             "sector_opinion": sector_result["opinion"],
             "warning": sector_result["warning"],
             "candidates": [],
         })
     else:
-        stock_names = sector_result["stock_names"]
-
-        # 2. 후보 종목 선정 (3조건 필터)
-        print("[후보 종목 선정] 3조건 필터링...")
-        candidates = chart_analyst.scan_watchlist(sector_result["watchlist"])
-        for c in candidates:
-            c["name"] = stock_names.get(c["code"], c["code"])
-            try:
-                info = get_current_price(c["code"])
-                c["current_price"] = info["price"]
-            except Exception:
-                c["current_price"] = int(c["close"])
+        # 2. 후보 종목 선정 (상위 3개 섹터 전체 3조건 필터)
+        print("[후보 종목 선정] 상위 3개 섹터 3조건 필터링...")
+        for sec in sector_result["top_sectors"]:
+            sec_candidates = chart_analyst.scan_watchlist(sec["watchlist"])
+            for c in sec_candidates:
+                c["name"] = sec["stock_names"].get(c["code"], c["code"])
+                c["sector"] = sec["name"]
+                try:
+                    info = get_current_price(c["code"])
+                    c["current_price"] = info["price"]
+                except Exception:
+                    c["current_price"] = int(c["close"])
+            candidates.extend(sec_candidates)
         print(f"  → 투자 고려 대상: {[c['code'] for c in candidates]}\n")
         save_json(CANDIDATES_FILE, {
             "date": today(),
-            "sector": sector_result["top_sector"],
+            "sector": sector_names,
             "sector_opinion": sector_result["opinion"],
             "warning": sector_result.get("warning", ""),
             "candidates": candidates,
         })
-        candidates = candidates  # 아래 보유 종목 확인 단계에서도 사용
 
     # 3. 현재 보유 종목 상태 확인 + 익절 대상 선정
     print("[보유 종목 확인] 익절 대상 선정...")
@@ -154,13 +159,14 @@ def pre_close():
 
     save_json(PROFIT_TARGETS_FILE, {"date": today(), "targets": profit_targets})
     print(f"\n  → 익절 대상: {[t['code'] for t in profit_targets]}")
-    print(f"\n[완료] 09:00 익절 매도, 14:30~15:30 고점 돌파 시 매수 예정\n")
-    notify_pre_close(sector_result["top_sector"], candidates, profit_targets)
+    print(f"\n[완료] 09:00 익절 매도, 10:00~10:30 고점 돌파 시 매수 예정\n")
+    notify_pre_open(sector_result["top_sectors"], candidates, profit_targets)
 
 
 # ── 단계 2: 장시작 (09:00) ───────────────────────────────────
 
 def market_open():
+    notify_start("market_open")
     print(f"\n{'='*50}")
     print(f"[{now()}] 단계2 — 장시작 익절 매도")
     print(f"{'='*50}\n")
@@ -204,9 +210,10 @@ def market_open():
     print()
 
 
-# ── 단계 2-5: 09:05~14:30 손절 모니터링 ─────────────────────
+# ── 단계 2-5: 09:05~15:30 손절 모니터링 ─────────────────────
 
 def stop_loss_monitor():
+    notify_start("stop_loss_monitor")
     print(f"\n{'='*50}")
     print(f"[{now()}] 손절 모니터링 시작 (15:30까지)")
     print(f"{'='*50}\n")
@@ -214,6 +221,7 @@ def stop_loss_monitor():
     stop_losses = load_json(STOP_LOSS_FILE, {})
     if not stop_losses:
         print("  보유 종목 없음 — 모니터링 종료\n")
+        notify_stop_loss_monitor_end(no_positions=True)
         return
 
     risk_manager = RiskManager()
@@ -251,14 +259,16 @@ def stop_loss_monitor():
             break
         time.sleep(60)
 
+    notify_stop_loss_monitor_end()
     print(f"  [{now()}] 손절 모니터링 종료\n")
 
 
-# ── 단계 3: 14:30~15:30 고점 돌파 감시 → 매수 ────────────────
+# ── 단계 3: 10:00~10:30 고점 돌파 감시 → 매수 ────────────────
 
 def entry_monitor():
+    notify_start("entry_monitor")
     print(f"\n{'='*50}")
-    print(f"[{now()}] 단계3 — 고점 돌파 감시 시작 (15:00~15:30)")
+    print(f"[{now()}] 단계3 — 고점 돌파 감시 시작 (10:00~10:30)")
     print(f"{'='*50}\n")
 
     state = load_json(CANDIDATES_FILE, {"candidates": []})
@@ -277,8 +287,13 @@ def entry_monitor():
 
     print(f"  감시 종목: {[c['code'] for c in candidates]}\n")
 
-    while datetime.now().strftime("%H%M") <= "1530":
-        balance = get_balance()
+    while datetime.now().strftime("%H%M") <= "1030":
+        try:
+            balance = get_balance()
+        except Exception as e:
+            notify_position_hold(f"잔액 조회 실패: {e}")
+            print(f"  [{now()}] 잔액 조회 실패 — 포지션 계산 보류: {e}")
+            break
         current_codes = {p["code"] for p in balance["positions"]}
 
         # 갭 4: 동시 돌파 대비 — 리스크 비율 낮은 순(손절가와 진입가 간격이 좁은 순)으로 우선 처리
@@ -330,7 +345,7 @@ def entry_monitor():
             except Exception as e:
                 print(f"  {code} 처리 실패: {e}")
 
-        if datetime.now().strftime("%H%M") > "1530":
+        if datetime.now().strftime("%H%M") > "1030":
             break
         time.sleep(60)
 
@@ -351,10 +366,10 @@ def today():
 # ── 메인 ─────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    phase = sys.argv[2] if len(sys.argv) > 2 else "pre_close"
+    phase = sys.argv[2] if len(sys.argv) > 2 else "pre_open"
 
-    if phase == "pre_close":
-        pre_close()
+    if phase == "pre_open":
+        pre_open()
     elif phase == "market_open":
         market_open()
     elif phase == "stop_loss_monitor":
@@ -363,4 +378,4 @@ if __name__ == "__main__":
         entry_monitor()
     else:
         print(f"알 수 없는 단계: {phase}")
-        print("사용법: python orchestrator.py [mock|real] [pre_close|market_open|stop_loss_monitor|entry_monitor]")
+        print("사용법: python orchestrator.py [mock|real] [pre_open|market_open|stop_loss_monitor|entry_monitor]")

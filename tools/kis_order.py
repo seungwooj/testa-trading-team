@@ -9,13 +9,19 @@ def buy(stock_code: str, quantity: int, price: int) -> dict:
         "CANO": KIS_ACCOUNT_NO,
         "ACNT_PRDT_CD": KIS_ACCOUNT_PROD_CODE,
         "PDNO": stock_code,
+        "CNDT_PRIC": "",
+        "SLL_TYPE": "",
         "ORD_DVSN": "00",
+        "EXCG_ID_DVSN_CD": "",
         "ORD_QTY": str(quantity),
         "ORD_UNPR": str(price),
     }
     res = requests.post(f"{KIS_TRADE_URL}/uapi/domestic-stock/v1/trading/order-cash", headers=headers, json=body)
     res.raise_for_status()
-    return res.json()
+    data = res.json()
+    if data.get("rt_cd") != "0":
+        raise RuntimeError(f"매수 실패 [{data.get('msg_cd')}] {data.get('msg1')}")
+    return data
 
 
 def sell(stock_code: str, quantity: int, price: int) -> dict:
@@ -24,13 +30,19 @@ def sell(stock_code: str, quantity: int, price: int) -> dict:
         "CANO": KIS_ACCOUNT_NO,
         "ACNT_PRDT_CD": KIS_ACCOUNT_PROD_CODE,
         "PDNO": stock_code,
+        "CNDT_PRIC": "",
+        "SLL_TYPE": "",
         "ORD_DVSN": "00",
+        "EXCG_ID_DVSN_CD": "",
         "ORD_QTY": str(quantity),
         "ORD_UNPR": str(price),
     }
     res = requests.post(f"{KIS_TRADE_URL}/uapi/domestic-stock/v1/trading/order-cash", headers=headers, json=body)
     res.raise_for_status()
-    return res.json()
+    data = res.json()
+    if data.get("rt_cd") != "0":
+        raise RuntimeError(f"매도 실패 [{data.get('msg_cd')}] {data.get('msg1')}")
+    return data
 
 
 def get_balance() -> dict:
