@@ -21,7 +21,16 @@ while true; do
 
     # 평일 — 장 운영
     if [[ $weekday -le 5 ]]; then
-        [[ $now == "0800" && -z $ran_pre_open   ]] && { ran_pre_open=1;   tlog "pre_open 시작";         { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 시작"; /usr/bin/python3 "$DIR/orchestrator.py" mock pre_open         2>&1; echo "[$(date '+%Y-%m-%d %H:%M:%S')] 종료"; } >> "$DIR/logs/pre_open.log"         & }
+        if [[ $now == "0800" && -z $ran_pre_open ]]; then
+            ran_pre_open=1
+            SKIP_FILE="$DIR/data/skip_pre_open.txt"
+            if [[ -f "$SKIP_FILE" && "$(cat $SKIP_FILE)" == "$today" ]]; then
+                tlog "pre_open 스킵 ($today) — skip_pre_open.txt 확인됨"
+            else
+                tlog "pre_open 시작"
+                { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 시작"; /usr/bin/python3 "$DIR/orchestrator.py" mock pre_open 2>&1; echo "[$(date '+%Y-%m-%d %H:%M:%S')] 종료"; } >> "$DIR/logs/pre_open.log" &
+            fi
+        fi
         [[ $now == "0900" && -z $ran_market_open ]] && { ran_market_open=1; tlog "market_open 시작";       { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 시작"; /usr/bin/python3 "$DIR/orchestrator.py" mock market_open       2>&1; echo "[$(date '+%Y-%m-%d %H:%M:%S')] 종료"; } >> "$DIR/logs/market_open.log"       & }
         [[ $now == "0905" && -z $ran_stop_loss   ]] && { ran_stop_loss=1;   tlog "stop_loss_monitor 시작"; { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 시작"; /usr/bin/python3 "$DIR/orchestrator.py" mock stop_loss_monitor 2>&1; echo "[$(date '+%Y-%m-%d %H:%M:%S')] 종료"; } >> "$DIR/logs/stop_loss_monitor.log" & }
         [[ $now == "1000" && -z $ran_entry       ]] && { ran_entry=1;        tlog "entry_monitor 시작";    { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 시작"; /usr/bin/python3 "$DIR/orchestrator.py" mock entry_monitor     2>&1; echo "[$(date '+%Y-%m-%d %H:%M:%S')] 종료"; } >> "$DIR/logs/entry_monitor.log"     & }
